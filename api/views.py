@@ -12,6 +12,14 @@ from rest_framework.permissions import (
     AllowAny
 )
 
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
+from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
+
+
+from rest_framework import status   
 # Create your views here.
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all()
@@ -88,3 +96,46 @@ class RequestViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Automatically assigns the request to the logged-in user."""
         serializer.save(user=self.request.user)
+
+class CustomJWTLoginView(APIView):
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user_id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'is_seller': user.is_seller 
+                
+            })
+        return Response({"error": "Invalid Credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class GetSellersByUserID(APIView):
+    def get(self, request, user_id):
+        sellers = Seller.objects.filter(user__id=user_id)
+        
+        if not sellers.exists():
+            return Response({"message": "No sellers found for this user."}, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response(SellerSerializer(sellers, many=True).data, status=status.HTTP_200_OK)
+
+User = get_user_model()
+
+class SetSellerStatusView(APIView):
+    permission_classes = [IsAuthenticated]  # ✅ Only authenticated users can update
+
+    def post(self, request):
+        user = request.user  # Get the logged-in user
+        user.is_seller = True  # Set `is_seller` to True
+        user.save()  # Save the change
+
+        return Response({"message": "User is now a seller", "is_seller": user.is_seller}, status=status.HTTP_200_OK)

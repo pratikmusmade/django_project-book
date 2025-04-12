@@ -37,7 +37,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name','password']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name','password','is_seller']
         
     def update(self, instance, validated_data):
         # If password is being updated, hash it

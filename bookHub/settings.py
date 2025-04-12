@@ -16,7 +16,7 @@ from pathlib import Path
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),  
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),  
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),    
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -43,6 +43,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+CORS_ALLOW_ALL_ORIGINS = True  # Allows requests from any origin (use with caution)
 
 # Application definition
 
@@ -57,6 +58,7 @@ INSTALLED_APPS = [
     'api',
     'rest_framework_simplejwt', 
     'django_extensions',
+    'corsheaders',
 
 ]
 
@@ -68,7 +70,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+
 ]
+
+
 
 ROOT_URLCONF = 'bookHub.urls'
 
@@ -158,3 +164,18 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'book_hub',  # Change to your database name
+        'USER': 'postgres',  # Your PostgreSQL username
+        'PASSWORD': 'root',  # Your PostgreSQL password
+        'HOST': 'localhost',
+        'PORT': '5432',  # Default PostgreSQL port
+    }
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # React frontend URL
+]

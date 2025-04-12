@@ -7,6 +7,8 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
+    is_seller = models.BooleanField(default=False)  # ✅ New field to indicate if user is a seller
+
 
     def __str__(self):
         return self.username
@@ -44,6 +46,10 @@ class Seller(models.Model):
     approved_status = models.BooleanField(default=False)
     gstin = models.CharField(max_length=15, unique=True) 
 
+    @staticmethod
+    def get_sellers_by_user(user_id):
+        return Seller.objects.filter(user__id=user_id)  # ✅ Fetch sellers by user ID
+    
     def __str__(self):
         return f"{self.shop_name} - {'Approved' if self.approved_status else 'Pending'}"
 
@@ -84,11 +90,19 @@ class Request(models.Model):
         ('rejected', 'Rejected'),
     ]
 
+    REQUEST_STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('in_progress', 'In Progress'),
+        ('closed', 'Closed'),
+    ]
+
     request_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="requests")
     book_title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    request_status = models.CharField(max_length=15, choices=REQUEST_STATUS_CHOICES, default='open')
+    accepted_seller = models.ForeignKey('Seller', on_delete=models.SET_NULL, null=True, blank=True, related_name="accepted_requests")
 
     def __str__(self):
         return f"{self.book_title} by {self.author} - {self.status}"
